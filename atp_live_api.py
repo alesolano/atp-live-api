@@ -24,7 +24,7 @@ def get_atp_live_dataframe():
     for row in table.find_all("tr"):
         try:
             country = row['class'][0]
-            if country.isupper() and len(country) == 3: # looking for 'GBR', 'SPA', 'SWI'...
+            if country.isupper() and len(country) == 3: # looking for 'GBR', 'SPA', 'SUI'...
                 players.append(row)
         except:
             pass
@@ -46,8 +46,18 @@ def get_atp_live_dataframe():
     for col in numeric_cols:
         df[col] = df[col].apply(pd.to_numeric, errors='coerce')
 
-    # Este es un caso especialito
-    df.career_high = df.career_high.apply(pd.to_numeric, errors='ignore')
+    # Column 'career_high' is a special case.
+    # This column includes the string "CH" or "NCH" if the player is currently on his career high.
+    n_player = 1
+    def pretty_career_high(ch):
+        nonlocal n_player
+        try:
+            new_ch = int(ch)
+        except:
+            new_ch = n_player
+        n_player += 1
+        return new_ch
+    df.career_high = df.career_high.apply(pretty_career_high)
 
     df = df.drop(['_1', '_2'], 1) # 1 is for columns. (0 is for rows)
 
